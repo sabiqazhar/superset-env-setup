@@ -93,7 +93,7 @@ rebuild:
 clean:
 	$(COMPOSE) down -v --remove-orphans
 	docker image rm -f superset-local:6.0.0 2>/dev/null || true
-	rm -rf ./volumes/postgres/* ./volumes/superset_home/*
+	sudo rm -rf ./volumes/postgres/* ./volumes/superset_home/* 2>/dev/null || rm -rf ./volumes/postgres/* ./volumes/superset_home/*
 	@echo "Cleaned all volumes including bind mounts"
 
 setup-env:
