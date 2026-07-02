@@ -122,7 +122,7 @@ To start fresh: `make clean` deletes volumes and the local image.
 | `make stop` | Stop running containers |
 | `make restart` | Restart all containers |
 | `make rebuild` | Build image, then recreate containers (`build` + `up --force-recreate`) |
-| `make clean` | Destroy containers + volumes + local image |
+| `make clean` | Destroy containers + volumes + local image + bind mount contents |
 
 ### Monitoring
 
@@ -162,11 +162,27 @@ Common drivers: `psycopg2-binary` (PostgreSQL, already installed), `mysqlclient`
 
 ## Troubleshooting
 
+### Common issues
+
 | Symptom | Likely fix |
 |---|---|
 | `make shell` fails — container not running | `make up` first |
 | Superset not loading at <http://localhost:8088> | `make ps` to check health; `make logs-superset` to see startup errors |
 | `make test` returns non-200 | Superset is still initializing — wait and retry |
 | Port 8088 already in use | Change the host port in `docker-compose.yml` (`8088:8088` → `9090:8088`) |
-| Want everything from scratch | `make clean && make build && make up && make init && make create-admin` |
 | Database error after config change | `make clean` wipes volumes; or manually delete `volumes/postgres/` |
+
+### PostgreSQL volume issues (IMPORTANT)
+
+The PostgreSQL data directory (`./volumes/postgres`) is a **bind mount** that persists on your host machine. This causes two common problems:
+
+1. **"initdb" error / "database files exist but no initdb has been run"**: 
+   - Happens when the postgres volume contains partial/corrupted data from a previous failed setup
+   - **Fix**: Run `make clean` to completely wipe all volumes, then start fresh with `make build && make up`
+
+2. **PostgreSQL container unhealthy or won't start**:
+   - Often caused by leftover data files in `./volumes/postgres/` from a previous installation
+   - The container expects either an empty directory OR a properly initialized database cluster
+   - **Fix**: Run `make clean` to remove all persistent data, then rebuild and restart
+
+**When in doubt, always run `make clean` before starting a fresh setup** to ensure no stale data interferes with initialization.
