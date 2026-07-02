@@ -55,6 +55,15 @@ All three have health checks. Superset waits for PostgreSQL and Redis to be heal
 - Superset: `8088` (mapped to host)
 - PostgreSQL and Redis are **not** exposed to the host by default.
 
+  To connect to PostgreSQL with a local tool (e.g., psql, DBeaver, TablePlus),
+  uncomment or add the port mapping in `docker-compose.yml`. If port **5432 is
+  already in use** on your host, pick a different host port:
+
+  ```yaml
+  ports:
+    - "5433:5432"   # host:5433 → container:5432
+  ```
+
 ## Configuration
 
 ### Environment variables (`.env`)
@@ -170,3 +179,35 @@ Common drivers: `psycopg2-binary` (PostgreSQL, already installed), `mysqlclient`
 | Port 8088 already in use | Change the host port in `docker-compose.yml` (`8088:8088` → `9090:8088`) |
 | Want everything from scratch | `make clean && make build && make up && make init && make create-admin` |
 | Database error after config change | `make clean` wipes volumes; or manually delete `volumes/postgres/` |
+
+### PostgreSQL volume issues
+
+The PostgreSQL data directory (`./volumes/postgres`) is a **bind mount** that
+persists on your host machine. This causes two common problems when starting
+fresh after a failed or partial setup:
+
+1. **"initdb" error / "database files exist but no initdb has been run"**
+   - The volume contains partial/corrupted data from a previous setup
+   - **Fix**: `make clean` wipes everything. Then `make build && make up`.
+
+2. **PostgreSQL container unhealthy or won't start**
+   - Leftover data files in `./volumes/postgres/` confuse the container
+   - The container expects either an **empty** directory or a properly
+     initialized database cluster — anything in between fails
+   - **Fix**: `make clean` to remove all persistent data, then rebuild.
+
+> When in doubt, always run `make clean` before starting a fresh setup to
+> ensure no stale data interferes with initialization.
+
+### Changing the PostgreSQL host port
+
+PostgreSQL is not exposed to the host by default. If you need to connect
+from a local client and port **5432 is already taken**, add a port mapping
+in `docker-compose.yml` under the `postgres` service:
+
+```yaml
+  ports:
+    - "5433:5432"
+```
+
+This maps host port `5433` → container port `5432`. Pick any free port.
