@@ -229,15 +229,9 @@ lsof -i :5432
        # ... rest of config
    ```
    
-   Then update the database connection string in `docker/pythonpath/superset_config.py`:
-   ```python
-   SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://superset:superset@postgres:<NEW_PORT>/superset"
-   ```
-   Replace `<NEW_PORT>` with the new port number you configured (e.g., if you changed mapping to `5433:5432`, use `5433`).
-   
-   After making these changes, rebuild and restart:
+   After making this change, rebuild and restart:
    ```bash
    make rebuild
    ```
-
-**Tip:** If you're not sure which approach to take, try stopping other PostgreSQL instances first. If you need both running simultaneously, change the port mapping as shown above.
+   
+   **Note:** You do NOT need to update `superset_config.py`. The internal container-to-container communication still uses port `5432`. Only the host port mapping changes.
