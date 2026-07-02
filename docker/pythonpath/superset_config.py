@@ -14,7 +14,8 @@ SQLALCHEMY_DATABASE_URI = (
     f"postgresql+psycopg2://"
     f"{os.getenv('POSTGRES_USER')}:"
     f"{os.getenv('POSTGRES_PASSWORD')}@"
-    f"postgres:5432/"
+    f"{os.getenv('POSTGRES_HOST', 'postgres')}:"
+    f"{os.getenv('POSTGRES_PORT', '5432')}/"
     f"{os.getenv('POSTGRES_DB')}"
 )
 

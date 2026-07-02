@@ -52,17 +52,21 @@ All three have health checks. Superset waits for PostgreSQL and Redis to be heal
 
 ### Ports
 
-- Superset: `8088` (mapped to host)
-- PostgreSQL and Redis are **not** exposed to the host by default.
+| Service | Host (default) | Container | Configurable via |
+|---|---|---|---|
+| **superset** | `8088` | `8088` | Edit `docker-compose.yml` |
+| **postgres** | `5432` | `5432` | `POSTGRES_PORT` in `.env` |
+| **redis** | *not exposed* | `6379` | — |
 
-  To connect to PostgreSQL with a local tool (e.g., psql, DBeaver, TablePlus),
-  uncomment or add the port mapping in `docker-compose.yml`. If port **5432 is
-  already in use** on your host, pick a different host port:
+PostgreSQL is exposed to the host so you can connect with local tools
+(psql, DBeaver, TablePlus). If port **5432 is already in use** on your
+host, set a different port in `.env`:
 
-  ```yaml
-  ports:
-    - "5433:5432"   # host:5433 → container:5432
-  ```
+```bash
+POSTGRES_PORT=5433   # any free port
+```
+
+Then `make up` again.
 
 ## Configuration
 
@@ -71,6 +75,8 @@ All three have health checks. Superset waits for PostgreSQL and Redis to be heal
 | Variable | Default | Description |
 |---|---|---|
 | `SUPERSET_SECRET_KEY` | `super-secret-key-change-me` | Flask secret key — **change in production** |
+| `POSTGRES_HOST` | `postgres` | PostgreSQL hostname (Docker service name) |
+| `POSTGRES_PORT` | `5432` | PostgreSQL port exposed on the host |
 | `POSTGRES_DB` | `superset` | PostgreSQL database name |
 | `POSTGRES_USER` | `superset` | PostgreSQL user |
 | `POSTGRES_PASSWORD` | `superset` | PostgreSQL password — **change in production** |
@@ -199,15 +205,18 @@ fresh after a failed or partial setup:
 > When in doubt, always run `make clean` before starting a fresh setup to
 > ensure no stale data interferes with initialization.
 
-### Changing the PostgreSQL host port
+### Port conflict on the host
 
-PostgreSQL is not exposed to the host by default. If you need to connect
-from a local client and port **5432 is already taken**, add a port mapping
-in `docker-compose.yml` under the `postgres` service:
+If `docker compose up` fails with "port is already allocated", check which
+service owns the busy port:
 
-```yaml
-  ports:
-    - "5433:5432"
+| Port | Service | Fix |
+|---|---|---|
+| `8088` | superset | Edit the host port in `docker-compose.yml` (`8088:8088` → `9090:8088`) |
+| `5432` | postgres | Set `POSTGRES_PORT=5433` (or any free port) in `.env` |
+
+After changing the port, run:
+
+```bash
+make down && make up
 ```
-
-This maps host port `5433` → container port `5432`. Pick any free port.
