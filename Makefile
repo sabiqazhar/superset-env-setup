@@ -92,7 +92,7 @@ rebuild:
 
 clean:
 	$(COMPOSE) down -v --remove-orphans
-	docker image rm -f superset-local:6.0.0 2>/dev/null || true
+	docker image rm -f superset-custom:6.0.0 2>/dev/null || true
 
 setup-env:
 	test -f .env || cp .env.example .env
