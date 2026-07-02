@@ -1,22 +1,7 @@
-```
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
-.idea/
-
 # Dependencies
 node_modules/
-.venv/
 venv/
+.venv/
 __pycache__/
 .mypy_cache/
 .pytest_cache/
@@ -36,11 +21,22 @@ target/
 *.obj
 *.out
 
-# System files
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
 .DS_Store
 Thumbs.db
+.env
+.env.local
+*.env.*
 
-# Coverage
+# Logs and coverage
+*.log
+*.tmp
 coverage/
 htmlcov/
 .coverage
@@ -68,4 +64,3 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-```

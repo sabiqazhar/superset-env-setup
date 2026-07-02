@@ -171,6 +171,7 @@ Common drivers: `psycopg2-binary` (PostgreSQL, already installed), `mysqlclient`
 | `make test` returns non-200 | Superset is still initializing — wait and retry |
 | Port 8088 already in use | Change the host port in `docker-compose.yml` (`8088:8088` → `9090:8088`) |
 | Database error after config change | `make clean` wipes volumes; or manually delete `volumes/postgres/` |
+| **Port 5432 already in use** (PostgreSQL) | See dedicated section below |
 
 ### PostgreSQL volume issues (IMPORTANT)
 
@@ -186,3 +187,57 @@ The PostgreSQL data directory (`./volumes/postgres`) is a **bind mount** that pe
    - **Fix**: Run `make clean` to remove all persistent data, then rebuild and restart
 
 **When in doubt, always run `make clean` before starting a fresh setup** to ensure no stale data interferes with initialization.
+
+### PostgreSQL port 5432 already in use
+
+If you have another PostgreSQL instance running on your host machine (e.g., from a local installation or another Docker container), port **5432** may already be occupied, causing the `superset-postgres` container to fail with "address already in use" or similar errors.
+
+**Check if port 5432 is in use:**
+
+```bash
+# Linux
+sudo netstat -tlnp | grep 5432
+# or
+sudo ss -tlnp | grep 5432
+
+# macOS
+lsof -i :5432
+```
+
+**Solutions:**
+
+1. **Stop the conflicting PostgreSQL service** (if it's not needed):
+   ```bash
+   # If running as a system service
+   sudo systemctl stop postgresql
+   sudo systemctl disable postgresql
+   
+   # Or if it's another Docker container
+   docker ps | grep postgres
+   docker stop <container_id>
+   ```
+
+2. **Change the PostgreSQL port in this setup** (recommended if you need both instances):
+   
+   Edit `docker-compose.yml` and modify the postgres service ports:
+   ```yaml
+   services:
+     postgres:
+       image: postgres:18-alpine
+       ports:
+         - "5433:5432"  # Change host port from 5432 to 5433
+       # ... rest of config
+   ```
+   
+   Then update the database connection string in `docker/pythonpath/superset_config.py`:
+   ```python
+   SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://superset:superset@postgres:<NEW_PORT>/superset"
+   ```
+   Replace `<NEW_PORT>` with the new port number you configured (e.g., if you changed mapping to `5433:5432`, use `5433`).
+   
+   After making these changes, rebuild and restart:
+   ```bash
+   make rebuild
+   ```
+
+**Tip:** If you're not sure which approach to take, try stopping other PostgreSQL instances first. If you need both running simultaneously, change the port mapping as shown above.
