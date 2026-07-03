@@ -205,6 +205,50 @@ fresh after a failed or partial setup:
 > When in doubt, always run `make clean` before starting a fresh setup to
 > ensure no stale data interferes with initialization.
 
+### PostgreSQL 18+ volume layout change
+
+Postgres 18+ images changed the expected volume mount. Instead of mounting at
+`/var/lib/postgresql/data`, they expect the mount at `/var/lib/postgresql`
+(the parent dir) so data lands in a version-specific subdirectory (e.g.,
+`/var/lib/postgresql/18/data`). This enables `pg_upgrade --link` across
+major versions without mount boundary issues.
+
+**Error**:
+
+```
+Error: in 18+, these Docker images are configured to store database data in a
+       format which is compatible with "pg_ctlcluster"...
+```
+
+**Fix**: The volume mount in `docker-compose.yml` already uses the correct
+path (`./volumes/postgres:/var/lib/postgresql`). If you modified it, ensure
+the mount point is `/var/lib/postgresql`, **not** `/var/lib/postgresql/data`.
+After correcting, run:
+
+```bash
+make down && make up
+```
+
+### ".gitkeep" blocking PostgreSQL init
+
+If `volumes/postgres/` contains a `.gitkeep` file (or any other file), the
+PostgreSQL container refuses to initialize because it expects an empty
+directory:
+
+```
+initdb: error: directory "/var/lib/postgresql/data" exists but is not empty
+```
+
+**Fix**:
+
+```bash
+rm volumes/postgres/.gitkeep
+make down && make up
+```
+
+If you already ran a failed attempt, also do `rm -rf volumes/postgres/*` to
+ensure a clean slate.
+
 ### Port conflict on the host
 
 If `docker compose up` fails with "port is already allocated", check which
