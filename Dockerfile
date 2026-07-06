@@ -11,6 +11,8 @@ COPY docker/pythonpath/superset_config.py /app/pythonpath/
 
 COPY docker/helsaBI.png /app/superset/static/assets/images/superset-logo-horiz.png
 
+COPY docker/favicon.png /app/superset/static/assets/images/favicon.png
+
 USER superset
 
 CMD ["/app/docker/entrypoints/run-server.sh"]
