@@ -9,6 +9,8 @@ RUN . /app/.venv/bin/activate && \
 
 COPY docker/pythonpath/superset_config.py /app/pythonpath/
 
+COPY docker/helsaBI.png /app/superset/static/assets/images/superset-logo-horiz.png
+
 USER superset
 
 CMD ["/app/docker/entrypoints/run-server.sh"]
